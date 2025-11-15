@@ -1,10 +1,12 @@
 import os
 from typing import List, Optional
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from bson.objectid import ObjectId
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from passlib.context import CryptContext
+import jwt
 
 from database import db, create_document, get_documents
 from schemas import Movie, Rating, Comment, Watchlist, ViewHistory, User
@@ -19,7 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --------- Helpers ---------
+# --------- Auth Setup ---------
+JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret")
+JWT_ALG = "HS256"
+ACCESS_TTL_MIN = 60 * 24 * 7  # 7 days
+
+pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def oid(s: str) -> ObjectId:
     try:
@@ -32,7 +40,6 @@ def serialize(doc):
     if not doc:
         return doc
     doc["id"] = str(doc.pop("_id"))
-    # convert datetimes
     for k, v in list(doc.items()):
         if isinstance(v, datetime):
             doc[k] = v.isoformat()
@@ -65,13 +72,116 @@ def test_database():
     return response
 
 
+# --------- Auth Models ---------
+class RegisterPayload(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+
+
+class LoginPayload(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class AuthUser(BaseModel):
+    id: str
+    name: str
+    email: EmailStr
+    role: str
+    avatar_url: Optional[str] = None
+
+
+# --------- Auth Helpers ---------
+
+def create_tokens(user: dict):
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": str(user["_id"]),
+        "name": user.get("name"),
+        "email": user.get("email"),
+        "role": user.get("role", "user"),
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(minutes=ACCESS_TTL_MIN)).timestamp()),
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
+    return token
+
+
+def get_user_from_token(authorization: Optional[str] = Header(None)) -> Optional[dict]:
+    if not authorization:
+        return None
+    try:
+        scheme, token = authorization.split(" ", 1)
+        if scheme.lower() != "bearer":
+            return None
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
+        uid = payload.get("sub")
+        if not uid:
+            return None
+        user = db["user"].find_one({"_id": oid(uid)})
+        return user
+    except Exception:
+        return None
+
+
+# --------- Auth Routes ---------
+@app.post("/api/auth/register")
+def register(payload: RegisterPayload):
+    if db["user"].find_one({"email": payload.email}):
+        raise HTTPException(400, "Email already registered")
+    hashed = pwd_ctx.hash(payload.password)
+    data = {
+        "name": payload.name,
+        "email": payload.email,
+        "password_hash": hashed,
+        "role": "user",
+        "avatar_url": None,
+        "is_active": True,
+        "email_verified": False,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+    inserted = db["user"].insert_one(data).inserted_id
+    user = db["user"].find_one({"_id": inserted})
+    token = create_tokens(user)
+    u = serialize(user)
+    u.pop("password_hash", None)
+    return {"token": token, "user": u}
+
+
+@app.post("/api/auth/login")
+def login(payload: LoginPayload):
+    user = db["user"].find_one({"email": payload.email})
+    if not user or not pwd_ctx.verify(payload.password, user.get("password_hash", "")):
+        raise HTTPException(401, "Invalid credentials")
+    if not user.get("is_active", True):
+        raise HTTPException(403, "User inactive")
+    token = create_tokens(user)
+    u = serialize(user)
+    u.pop("password_hash", None)
+    return {"token": token, "user": u}
+
+
+@app.get("/api/auth/me")
+def me(current_user: Optional[dict] = Depends(get_user_from_token)):
+    if not current_user:
+        raise HTTPException(401, "Not authenticated")
+    u = serialize(current_user)
+    u.pop("password_hash", None)
+    return u
+
+
 # --------- Movies ---------
 class MovieCreate(Movie):
     pass
 
 
 @app.post("/api/movies")
-def create_movie(movie: MovieCreate):
+def create_movie(movie: MovieCreate, current_user: Optional[dict] = Depends(get_user_from_token)):
+    # optional simple protection: only admin can create
+    if current_user and current_user.get("role") != "admin":
+        raise HTTPException(403, "Forbidden")
     movie_dict = movie.model_dump()
     movie_dict["created_at"] = datetime.now(timezone.utc)
     movie_dict["updated_at"] = datetime.now(timezone.utc)
@@ -136,13 +246,11 @@ class RatingCreate(BaseModel):
 
 @app.post("/api/movies/{movie_id}/ratings")
 def rate_movie(movie_id: str, payload: RatingCreate):
-    # upsert rating by user
     db["rating"].update_one(
         {"movie_id": movie_id, "user_id": payload.user_id},
         {"$set": {"value": payload.value, "updated_at": datetime.now(timezone.utc)}},
         upsert=True,
     )
-    # recalc avg
     cur = db["rating"].find({"movie_id": movie_id})
     vals = [r.get("value", 0) for r in cur]
     avg = sum(vals) / len(vals) if vals else 0
@@ -174,7 +282,7 @@ def add_comment(movie_id: str, payload: CommentCreate):
         "user_id": payload.user_id,
         "text": payload.text,
         "spoiler": payload.spoiler,
-        "status": "approved",  # demo: auto-approve
+        "status": "approved",
         "created_at": datetime.now(timezone.utc),
     }
     inserted = db["comment"].insert_one(data).inserted_id
