@@ -1,0 +1,31 @@
+INFO:     Will watch for changes in these directories: ['/home/workspace']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [160] using StatReload
+INFO:     Started server process [162]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     172.20.0.1:51766 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:51776 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:51766 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:51776 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:51766 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:51766 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:51776 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:51776 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:51788 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+INFO:     172.20.0.1:41154 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:41156 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:41154 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:41156 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:41154 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:41156 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:41154 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:41156 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:55824 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:55808 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:55808 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:55824 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:55808 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:55824 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:55808 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:55808 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK

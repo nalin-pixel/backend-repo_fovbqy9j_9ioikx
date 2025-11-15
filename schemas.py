@@ -1,48 +1,74 @@
 """
-Database Schemas
+UzbCinemaHub Schemas
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Define MongoDB collection schemas using Pydantic models.
+Each model name lowercased is used as collection name.
 """
+from pydantic import BaseModel, Field, EmailStr
+from typing import List, Optional
+from datetime import datetime
 
-from pydantic import BaseModel, Field
-from typing import Optional
-
-# Example schemas (replace with your own):
-
+# ---------- User & Auth ----------
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
     name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    email: EmailStr = Field(..., description="Email address")
+    password_hash: str = Field(..., description="Hashed password")
+    role: str = Field("user", description="Role: user|moderator|admin")
+    avatar_url: Optional[str] = Field(None)
+    is_active: bool = Field(True)
+    email_verified: bool = Field(False)
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+# ---------- Movies & Series ----------
+class MovieSource(BaseModel):
+    label: str = Field(..., description="Quality label e.g., 1080p")
+    url: str = Field(..., description="Streaming URL or file path")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Subtitle(BaseModel):
+    lang: str = Field(..., description="Language code e.g., uz, ru, en")
+    url: str = Field(...)
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Movie(BaseModel):
+    title: str = Field(...)
+    original_title: Optional[str] = Field(None)
+    description: Optional[str] = Field(None)
+    year: int = Field(...)
+    duration_min: int = Field(..., ge=1)
+    genres: List[str] = Field(default_factory=list)
+    director: Optional[str] = None
+    cast: List[str] = Field(default_factory=list)
+    country: Optional[str] = None
+    poster_url: Optional[str] = None
+    trailer_youtube: Optional[str] = None
+    sources: List[MovieSource] = Field(default_factory=list)
+    subtitles: List[Subtitle] = Field(default_factory=list)
+    audio_tracks: List[str] = Field(default_factory=list)
+    status: str = Field("active", description="active|inactive")
+    imdb_rating: Optional[float] = Field(None, ge=0, le=10)
+    avg_rating: float = Field(0)
+    views: int = Field(0)
+    tags: List[str] = Field(default_factory=list)
+
+class Rating(BaseModel):
+    user_id: str
+    movie_id: str
+    value: float = Field(..., ge=0, le=10)
+    created_at: Optional[datetime] = None
+
+class Comment(BaseModel):
+    user_id: str
+    movie_id: str
+    text: str
+    spoiler: bool = False
+    status: str = Field("pending", description="pending|approved|rejected")
+    created_at: Optional[datetime] = None
+
+class Watchlist(BaseModel):
+    user_id: str
+    movie_id: str
+    created_at: Optional[datetime] = None
+
+class ViewHistory(BaseModel):
+    user_id: str
+    movie_id: str
+    position_sec: int = 0
+    updated_at: Optional[datetime] = None
