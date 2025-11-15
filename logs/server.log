@@ -1,23 +1,23 @@
 INFO:     Will watch for changes in these directories: ['/home/workspace']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [246] using StatReload
-INFO:     Started server process [248]
+INFO:     Started reloader process [333] using StatReload
+INFO:     Started server process [335]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     172.20.0.1:60990 - "HEAD / HTTP/1.1" 405 Method Not Allowed
-INFO:     172.20.0.1:32774 - "POST /api/seed HTTP/1.1" 200 OK
-INFO:     172.20.0.1:32772 - "POST /api/seed HTTP/1.1" 200 OK
-INFO:     172.20.0.1:32774 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:32772 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:32774 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:32774 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:32772 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:32774 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:37366 - "POST /api/seed HTTP/1.1" 200 OK
-INFO:     172.20.0.1:37380 - "POST /api/seed HTTP/1.1" 200 OK
-INFO:     172.20.0.1:37380 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:37380 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:37366 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:37366 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:37380 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
-INFO:     172.20.0.1:37380 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45960 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+INFO:     172.20.0.1:45972 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45974 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45972 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45972 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45974 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45972 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45974 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:45974 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:34146 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:34148 - "POST /api/seed HTTP/1.1" 200 OK
+INFO:     172.20.0.1:34146 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:34148 - "GET /api/movies?sort=new&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:34146 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:34146 - "GET /api/movies?sort=popular&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:34148 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK
+INFO:     172.20.0.1:34148 - "GET /api/movies?sort=rating&limit=12 HTTP/1.1" 200 OK

@@ -172,6 +172,13 @@ def me(current_user: Optional[dict] = Depends(get_user_from_token)):
     return u
 
 
+# --------- Admin helpers ---------
+
+def require_admin(user: Optional[dict]):
+    if not user or user.get("role") != "admin":
+        raise HTTPException(403, "Admin only")
+
+
 # --------- Movies ---------
 class MovieCreate(Movie):
     pass
@@ -179,15 +186,34 @@ class MovieCreate(Movie):
 
 @app.post("/api/movies")
 def create_movie(movie: MovieCreate, current_user: Optional[dict] = Depends(get_user_from_token)):
-    # optional simple protection: only admin can create
-    if current_user and current_user.get("role") != "admin":
-        raise HTTPException(403, "Forbidden")
+    require_admin(current_user)
     movie_dict = movie.model_dump()
     movie_dict["created_at"] = datetime.now(timezone.utc)
     movie_dict["updated_at"] = datetime.now(timezone.utc)
     inserted_id = db["movie"].insert_one(movie_dict).inserted_id
     doc = db["movie"].find_one({"_id": inserted_id})
     return serialize(doc)
+
+
+@app.put("/api/movies/{movie_id}")
+def update_movie(movie_id: str, movie: MovieCreate, current_user: Optional[dict] = Depends(get_user_from_token)):
+    require_admin(current_user)
+    movie_dict = movie.model_dump()
+    movie_dict["updated_at"] = datetime.now(timezone.utc)
+    res = db["movie"].update_one({"_id": oid(movie_id)}, {"$set": movie_dict})
+    if res.matched_count == 0:
+        raise HTTPException(404, "Movie not found")
+    doc = db["movie"].find_one({"_id": oid(movie_id)})
+    return serialize(doc)
+
+
+@app.delete("/api/movies/{movie_id}")
+def delete_movie(movie_id: str, current_user: Optional[dict] = Depends(get_user_from_token)):
+    require_admin(current_user)
+    res = db["movie"].delete_one({"_id": oid(movie_id)})
+    if res.deleted_count == 0:
+        raise HTTPException(404, "Movie not found")
+    return {"ok": True}
 
 
 @app.get("/api/movies")
@@ -360,6 +386,37 @@ def get_continue_watching(user_id: str, limit: int = 10):
             m["position_sec"] = vh.get("position_sec", 0)
             items.append(m)
     return items
+
+
+# --------- Admin: users ---------
+class RoleUpdate(BaseModel):
+    role: str
+
+
+@app.get("/api/admin/users")
+def admin_list_users(limit: int = 50, current_user: Optional[dict] = Depends(get_user_from_token)):
+    require_admin(current_user)
+    cur = db["user"].find({}).sort("created_at", -1).limit(max(1, min(limit, 200)))
+    users = []
+    for u in cur:
+        u = serialize(u)
+        u.pop("password_hash", None)
+        users.append(u)
+    return users
+
+
+@app.patch("/api/admin/users/{user_id}/role")
+def admin_set_role(user_id: str, payload: RoleUpdate, current_user: Optional[dict] = Depends(get_user_from_token)):
+    require_admin(current_user)
+    if payload.role not in ["user", "admin", "moderator"]:
+        raise HTTPException(400, "Invalid role")
+    res = db["user"].update_one({"_id": oid(user_id)}, {"$set": {"role": payload.role, "updated_at": datetime.now(timezone.utc)}})
+    if res.matched_count == 0:
+        raise HTTPException(404, "User not found")
+    u = db["user"].find_one({"_id": oid(user_id)})
+    u = serialize(u)
+    u.pop("password_hash", None)
+    return u
 
 
 # --------- Demo seed ---------
